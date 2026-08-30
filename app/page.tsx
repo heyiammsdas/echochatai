@@ -1,17 +1,22 @@
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import EchoChatApp from "@/components/chat/EchoChatApp";
 
-import  LogoutButton  from "@/components/LogoutButton"
+export default async function HomePage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-export default function Home() {
+  if (!session) {
+    return null;
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-
-        <h1 className="text-4xl font-semibold"> Welcome to EchoChat AI</h1>
-          <div className="mt-6">
-              <LogoutButton/>
-          </div>
-    </div>
-  )
-
-
+    <EchoChatApp
+      user={{
+        name: session.user.name,
+        email: session.user.email,
+      }}
+    />
+  );
 }
