@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 
@@ -16,19 +16,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function SignupPage() {
-  const [name, setName] = useState("");
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
+  const handleLogin = async () => {
     setLoading(true);
 
-    const result = await authClient.signUp.email({
-      name,
+    const result = await authClient.signIn.email({
       email,
       password,
     });
@@ -40,54 +36,60 @@ export default function SignupPage() {
       return;
     }
 
-    alert("Account created successfully!");
+    alert("Logged in successfully!");
   };
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
-      {/* Logo / Brand */}
+
+      {/* Logo */}
       <div className="mb-8 flex items-center gap-2">
         <div className="h-7 w-7 rounded-md bg-foreground" />
-        <span className="text-lg font-semibold tracking-tight">EchoChat</span>
+
+        <span className="text-lg font-semibold tracking-tight">
+          EchoChat
+        </span>
       </div>
 
-      {/* Welcome Section */}
+      {/* Welcome */}
       <div className="mb-8 max-w-md text-center">
         <h1 className="text-4xl font-semibold tracking-tight">
-          Welcome to EchoChat
+          Welcome back
         </h1>
+
         <p className="mt-3 text-sm text-muted-foreground">
-          Your AI conversation starts here.
+          Sign in to continue to EchoChat.
         </p>
       </div>
 
-      {/* Signup Card */}
+      {/* Login Card */}
       <Card className="w-full max-w-md border-border/60 bg-card/80 shadow-2xl shadow-black/20">
+
         <CardHeader className="space-y-2">
-          <CardTitle className="text-xl">Create an account</CardTitle>
+          <CardTitle className="text-xl">
+            Sign in
+          </CardTitle>
+
           <CardDescription>
-            Sign up to start chatting with EchoChat.
+            Enter your email and password to continue.
           </CardDescription>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleSignup} className="space-y-5">
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleLogin();
+            }}
+            className="space-y-5"
+          >
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">
+                Email
+              </Label>
+
               <Input
                 id="email"
                 type="email"
@@ -100,7 +102,10 @@ export default function SignupPage() {
 
             {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">
+                Password
+              </Label>
+
               <Input
                 id="password"
                 type="password"
@@ -111,20 +116,26 @@ export default function SignupPage() {
               />
             </div>
 
-            {/* Submit */}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Create account"}
+            {/* Login Button */}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
+
           </form>
 
-          {/* Login */}
+          {/* Signup Link */}
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
+            Don&apos;t have an account?{" "}
+
             <Link
-              href="/login"
+              href="/signup"
               className="font-medium text-foreground hover:underline"
             >
-              Sign in
+              Create an account
             </Link>
           </div>
         </CardContent>
@@ -134,6 +145,7 @@ export default function SignupPage() {
       <p className="mt-8 text-xs text-muted-foreground">
         By continuing, you agree to our terms and privacy policy.
       </p>
+
     </main>
   );
 }
