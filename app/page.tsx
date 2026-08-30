@@ -1,12 +1,12 @@
 
-import { Button } from "../components/ui/button"
+
 
 export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
 
-      <Button> Hello World </Button>
+        <h1> Welcome to EchoChat AI</h1>
 
     </div>
   )

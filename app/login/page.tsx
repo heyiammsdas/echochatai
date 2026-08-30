@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +22,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const route = useRouter()
+
   const handleLogin = async () => {
     setLoading(true);
 
@@ -36,7 +39,8 @@ export default function LoginPage() {
       return;
     }
 
-    alert("Logged in successfully!");
+    route.push("/") 
+
   };
 
   return (
