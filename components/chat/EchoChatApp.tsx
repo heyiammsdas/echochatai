@@ -129,6 +129,18 @@ console.log(messages)
 
     setMessages((prev) => [...prev , newMessage]) ;
     setMessage("");
+
+    setTimeout(() => {
+    const assistantMessage: ChatMessage = {
+      id: Date.now() + 1,
+      role: "assistant",
+      content:
+        "This is a temporary EchoChat response. We will connect the real AI model here soon.",
+    };
+
+    setMessages((prev) => [...prev, assistantMessage]);
+  }, 800);
+
     
   };
 
