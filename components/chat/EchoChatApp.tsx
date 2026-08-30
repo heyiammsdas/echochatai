@@ -32,6 +32,13 @@ type EchoChatAppProps = {
   };
 };
 
+type ChatMessage = {
+
+  id: number ; 
+  role: "user" | "assistant" ;
+  content : string ;
+} ;
+
 const suggestions = [
   {
     icon: Lightbulb,
@@ -94,9 +101,13 @@ export default function EchoChatApp({
 }: EchoChatAppProps) {
   const router = useRouter();
 
-  const [message, setMessage] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showProfile, setShowProfile] = useState(false);
+const [message, setMessage] = useState("");
+const [messages, setMessages] = useState<ChatMessage[]>([]);
+const [sidebarOpen, setSidebarOpen] = useState(true);
+const [showProfile, setShowProfile] = useState(false);
+
+console.log(messages)
+
 
   const handleLogout = async () => {
     await authClient.signOut();
@@ -110,9 +121,15 @@ export default function EchoChatApp({
   const handleSend = () => {
     if (!message.trim()) return;
 
-    console.log("Message:", message);
+    const newMessage : ChatMessage = {
+      id: Date.now(), 
+      role: "user" ,
+      content : message.trim() 
+    } ;
 
+    setMessages((prev) => [...prev , newMessage]) ;
     setMessage("");
+    
   };
 
   return (
@@ -444,130 +461,149 @@ export default function EchoChatApp({
 
         {/* Chat Area */}
         <div className="relative min-h-0 flex-1">
-
           {/* Welcome */}
-          <div
-            className="
-              h-full
-              overflow-y-auto
-              px-6
-              pb-55
-            "
-          >
-            <div
+          <div className="h-full overflow-y-auto px-6 pb-55">
+  {messages.length === 0 ? (
+    /* ================= WELCOME SCREEN ================= */
+    <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col items-center justify-center">
+
+      <div className="mb-6">
+        <div
+          className="
+            flex h-16 w-16 items-center justify-center
+            rounded-2xl
+            border border-violet-400/20
+            bg-violet-500/10
+            text-violet-400
+            shadow-xl shadow-violet-950/20
+          "
+        >
+          <Sparkles size={30} />
+        </div>
+      </div>
+
+      <h1
+        className="
+          text-center
+          text-4xl
+          font-semibold
+          tracking-tight
+          md:text-5xl
+        "
+      >
+        How can I help you today?
+      </h1>
+
+      <p className="mt-4 text-center text-base text-zinc-500">
+        Ask anything. I&apos;m here to help.
+      </p>
+
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        {suggestions.map((item) => {
+          const Icon = item.icon;
+
+          return (
+            <button
+              type="button"
+              key={item.label}
+              onClick={() => handleSuggestion(item.label)}
               className="
-                mx-auto flex min-h-full w-full max-w-4xl
-                flex-col items-center justify-center
+                flex items-center gap-2
+                rounded-full
+                border border-white/8
+                bg-white/2.5
+                px-5 py-2.5
+                text-sm font-medium
+                text-zinc-300
+                transition
+                hover:border-violet-400/20
+                hover:bg-violet-500/8
+                hover:text-white
               "
             >
+              <Icon
+                size={17}
+                className="text-violet-400"
+              />
 
-              {/* EchoChat Icon */}
-              <div className="mb-6">
-                <div
-                  className="
-                    flex h-16 w-16 items-center justify-center
-                    rounded-2xl
-                    border border-violet-400/20
-                    bg-violet-500/10
-                    text-violet-400
-                    shadow-xl shadow-violet-950/20
-                  "
-                >
-                  <Sparkles size={30} />
-                </div>
-              </div>
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
 
-              <h1
-                className="
-                  text-center
-                  text-4xl
-                  font-semibold
-                  tracking-tight
-                  md:text-5xl
-                "
-              >
-                How can I help you today?
-              </h1>
+      <div
+        className="
+          mx-auto mt-8
+          w-full max-w-3xl
+          overflow-hidden
+          rounded-2xl
+          border border-white/7
+          bg-white/1.5
+        "
+      >
+        {exampleQuestions.map((question) => (
+          <button
+            type="button"
+            key={question}
+            onClick={() => handleSuggestion(question)}
+            className="
+              flex w-full items-center
+              border-b border-white/6
+              px-5 py-4
+              text-left text-sm
+              text-zinc-300
+              transition
+              last:border-b-0
+              hover:bg-white/4
+              hover:text-white
+            "
+          >
+            <span className="flex-1">
+              {question}
+            </span>
 
-              <p className="mt-4 text-center text-base text-zinc-500">
-                Ask anything. I&apos;m here to help.
-              </p>
+            <ArrowRight
+              size={17}
+              className="text-zinc-600"
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  ) : (
+    /* ================= MESSAGES ================= */
+    <div className="mx-auto w-full max-w-3xl space-y-6 pt-8">
 
-              {/* Action buttons */}
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
-                {suggestions.map((item) => {
-                  const Icon = item.icon;
+      {messages.map((msg) => (
+        <div
+          key={msg.id}
+          className={`flex ${
+            msg.role === "user"
+              ? "justify-end"
+              : "justify-start"
+          }`}
+        >
+          <div
+            className={`
+              max-w-[80%]
+              rounded-2xl
+              px-5 py-3.5
+              text-sm leading-7
+              ${
+                msg.role === "user"
+                  ? "bg-violet-600 text-white"
+                  : "border border-white/7 bg-white/4 text-zinc-200"
+              }
+            `}
+          >
+            {msg.content}
+          </div>
+        </div>
+      ))}
 
-                  return (
-                    <button
-                      type="button"
-                      key={item.label}
-                      onClick={() => handleSuggestion(item.label)}
-                      className="
-                        flex items-center gap-2
-                        rounded-full
-                        border border-white/8
-                        bg-white/2.5
-                        px-5 py-2.5
-                        text-sm font-medium
-                        text-zinc-300
-                        transition
-                        hover:border-violet-400/20
-                        hover:bg-violet-500/8
-                        hover:text-white
-                      "
-                    >
-                      <Icon
-                        size={17}
-                        className="text-violet-400"
-                      />
-
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Questions */}
-              <div
-                className="
-                  mx-auto mt-8
-                  w-full max-w-3xl
-                  overflow-hidden
-                  rounded-2xl
-                  border border-white/7
-                  bg-white/1.5
-                "
-              >
-                {exampleQuestions.map((question) => (
-                  <button
-                    type="button"
-                    key={question}
-                    onClick={() => handleSuggestion(question)}
-                    className="
-                      flex w-full items-center
-                      border-b border-white/6
-                      px-5 py-4
-                      text-left text-sm
-                      text-zinc-300
-                      transition
-                      last:border-b-0
-                      hover:bg-white/4
-                      hover:text-white
-                    "
-                  >
-                    <span className="flex-1">
-                      {question}
-                    </span>
-
-                    <ArrowRight
-                      size={17}
-                      className="text-zinc-600"
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
+    </div>
+  )}
           </div>
 
           {/* Composer */}
