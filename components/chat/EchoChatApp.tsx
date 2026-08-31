@@ -103,6 +103,7 @@ export default function EchoChatApp({
 
 const [message, setMessage] = useState("");
 const [messages, setMessages] = useState<ChatMessage[]>([]);
+const [isThinking, setIsThinking] = useState(false);
 const [sidebarOpen, setSidebarOpen] = useState(true);
 const [showProfile, setShowProfile] = useState(false);
 
@@ -119,7 +120,7 @@ console.log(messages)
   };
 
   const handleSend = () => {
-    if (!message.trim()) return;
+    if (!message.trim() || isThinking) return;
 
     const newMessage : ChatMessage = {
       id: Date.now(), 
@@ -130,6 +131,8 @@ console.log(messages)
     setMessages((prev) => [...prev , newMessage]) ;
     setMessage("");
 
+    setIsThinking(true) ;
+
     setTimeout(() => {
     const assistantMessage: ChatMessage = {
       id: Date.now() + 1,
@@ -139,9 +142,9 @@ console.log(messages)
     };
 
     setMessages((prev) => [...prev, assistantMessage]);
-  }, 800);
+    setIsThinking(false); 
+  }, 1200);
 
-    
   };
 
   return (
@@ -613,7 +616,21 @@ console.log(messages)
           </div>
         </div>
       ))}
+      {isThinking && (
+  <div className="flex justify-start">
+    <div className="flex items-center gap-2 rounded-2xl border border-white/7 bg-white/4 px-5 py-3.5">
+      <div className="flex gap-1">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" />
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400 [animation-delay:150ms]" />
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400 [animation-delay:300ms]" />
+      </div>
 
+      <span className="text-sm text-zinc-500">
+        EchoChat is thinking...
+      </span>
+    </div>
+  </div>
+       )}
     </div>
   )}
           </div>
