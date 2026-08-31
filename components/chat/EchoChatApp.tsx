@@ -119,7 +119,7 @@ console.log(messages)
     setMessage(text);
   };
 
-  const handleSend = () => {
+  const handleSend =async () => {
     if (!message.trim() || isThinking) return;
 
     const newMessage : ChatMessage = {
@@ -128,22 +128,38 @@ console.log(messages)
       content : message.trim() 
     } ;
 
-    setMessages((prev) => [...prev , newMessage]) ;
+    setMessages((prev) => [...prev , newMessage]);
+
+    const currentMessage = message.trim() ;
+
     setMessage("");
 
     setIsThinking(true) ;
 
-    setTimeout(() => {
-    const assistantMessage: ChatMessage = {
-      id: Date.now() + 1,
-      role: "assistant",
-      content:
-        "This is a temporary EchoChat response. We will connect the real AI model here soon.",
-    };
+    try {
+      const response = await fetch("api/chat" , {
+        method: "POST" ,
+        headers: {
+          "content-Type": "application/json",
+        }, 
+        body: JSON.stringify({
+          message: currentMessage,
+        }) ,
+      }) ;
+      
+      const data = await response.json() ;
+      console.log("API response:", data) ;
 
-    setMessages((prev) => [...prev, assistantMessage]);
-    setIsThinking(false); 
-  }, 1200);
+
+    }
+
+    catch (error){
+      console.log("Chat API error:", error) ;
+    }
+    finally {
+      setIsThinking(false ) 
+    }
+
 
   };
 
