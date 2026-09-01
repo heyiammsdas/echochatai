@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useChat } from "@ai-sdk/react" ;
 import {
   ArrowRight,
   ChevronDown,
@@ -100,14 +101,13 @@ export default function EchoChatApp({
   user,
 }: EchoChatAppProps) {
   const router = useRouter();
-
+const {messages: aiMessages, sendMessage, status} = useChat()
 const [message, setMessage] = useState("");
-const [messages, setMessages] = useState<ChatMessage[]>([]);
-const [isThinking, setIsThinking] = useState(false);
+
 const [sidebarOpen, setSidebarOpen] = useState(true);
 const [showProfile, setShowProfile] = useState(false);
 
-console.log(messages)
+
 
 
   const handleLogout = async () => {
@@ -119,55 +119,15 @@ console.log(messages)
     setMessage(text);
   };
 
-  const handleSend =async () => {
-    if (!message.trim() || isThinking) return;
+  const handleSend = () => {
+  if (!message.trim() || status !== "ready") return;
 
-    const newMessage : ChatMessage = {
-      id: Date.now(), 
-      role: "user" ,
-      content : message.trim() 
-    } ;
+  sendMessage({
+    text: message.trim(),
+  });
 
-    setMessages((prev) => [...prev , newMessage]);
-
-    const currentMessage = message.trim() ;
-
-    setMessage("");
-
-    setIsThinking(true) ;
-
-    try {
-      const response = await fetch("api/chat" , {
-        method: "POST" ,
-        headers: {
-          "content-Type": "application/json",
-        }, 
-        body: JSON.stringify({
-          message: currentMessage,
-        }) ,
-      }) ;
-      
-      const data = await response.json() ;
-      
-      const assistantMessage : ChatMessage = {
-        id: Date.now() + 1,
-        role: "assistant" ,
-        content: data.message,
-      } ;
-
-      setMessages((prev) => [...prev , assistantMessage]);
-
-    }
-
-    catch (error){
-      console.log("Chat API error:", error) ;
-    }
-    finally {
-      setIsThinking(false ) 
-    }
-
-
-  };
+  setMessage("");
+};
 
   return (
     <main className="flex h-screen w-full overflow-hidden bg-[#09090d] text-zinc-100">
@@ -500,7 +460,7 @@ console.log(messages)
         <div className="relative min-h-0 flex-1">
           {/* Welcome */}
           <div className="h-full overflow-y-auto px-6 pb-55">
-  {messages.length === 0 ? (
+  {aiMessages.length === 0 ? (
     /* ================= WELCOME SCREEN ================= */
     <div className="mx-auto flex min-h-full w-full max-w-4xl flex-col items-center justify-center">
 
@@ -612,7 +572,7 @@ console.log(messages)
     /* ================= MESSAGES ================= */
     <div className="mx-auto w-full max-w-3xl space-y-6 pt-8">
 
-      {messages.map((msg) => (
+      {aiMessages.map((msg) => (
         <div
           key={msg.id}
           className={`flex ${
@@ -634,25 +594,16 @@ console.log(messages)
               }
             `}
           >
-            {msg.content}
+             {msg.parts.map((part, index) => {
+                if (part.type === "text") {
+                return <span key={index}>{part.text}</span>;
+              }
+
+                return null;
+              })}
           </div>
         </div>
       ))}
-      {isThinking && (
-  <div className="flex justify-start">
-    <div className="flex items-center gap-2 rounded-2xl border border-white/7 bg-white/4 px-5 py-3.5">
-      <div className="flex gap-1">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400" />
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400 [animation-delay:150ms]" />
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-violet-400 [animation-delay:300ms]" />
-      </div>
-
-      <span className="text-sm text-zinc-500">
-        EchoChat is thinking...
-      </span>
-    </div>
-  </div>
-       )}
     </div>
   )}
           </div>
