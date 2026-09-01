@@ -148,8 +148,14 @@ console.log(messages)
       }) ;
       
       const data = await response.json() ;
-      console.log("API response:", data) ;
+      
+      const assistantMessage : ChatMessage = {
+        id: Date.now() + 1,
+        role: "assistant" ,
+        content: data.message,
+      } ;
 
+      setMessages((prev) => [...prev , assistantMessage]);
 
     }
 
