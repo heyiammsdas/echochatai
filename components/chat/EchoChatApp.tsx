@@ -727,7 +727,7 @@ const [showProfile, setShowProfile] = useState(false);
                   <button
                     type="button"
                     onClick={handleSend}
-                    disabled={!message.trim()}
+                    disabled={!message.trim() || status!=="ready"}
                     className="
                       ml-auto
                       flex h-10 w-10
