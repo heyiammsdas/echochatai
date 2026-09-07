@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Conversation: 'Conversation',
+  Message: 'Message',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification'
@@ -96,6 +97,18 @@ export const ConversationScalarFieldEnum = {
 } as const
 
 export type ConversationScalarFieldEnum = (typeof ConversationScalarFieldEnum)[keyof typeof ConversationScalarFieldEnum]
+
+
+export const MessageScalarFieldEnum = {
+  id: 'id',
+  conversationId: 'conversationId',
+  role: 'role',
+  content: 'content',
+  model: 'model',
+  createdAt: 'createdAt'
+} as const
+
+export type MessageScalarFieldEnum = (typeof MessageScalarFieldEnum)[keyof typeof MessageScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {

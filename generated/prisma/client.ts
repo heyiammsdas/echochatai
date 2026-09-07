@@ -52,6 +52,11 @@ export type User = Prisma.UserModel
  */
 export type Conversation = Prisma.ConversationModel
 /**
+ * Model Message
+ * 
+ */
+export type Message = Prisma.MessageModel
+/**
  * Model Session
  * 
  */
