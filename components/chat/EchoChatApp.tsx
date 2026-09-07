@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef} from "react";
 import { useChat } from "@ai-sdk/react" ;
 import {
   ArrowRight,
@@ -95,8 +95,15 @@ export default function EchoChatApp({
   user,
 }: EchoChatAppProps) {
   const router = useRouter();
-const {messages: aiMessages, sendMessage, status} = useChat()
+const {messages: aiMessages, sendMessage, status, error} = useChat()
 const [message, setMessage] = useState("");
+
+const messagesEndRef = useRef<HTMLDivElement>(null); 
+
+useEffect(() => {
+  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+}, [aiMessages]);
+
 
 const [sidebarOpen, setSidebarOpen] = useState(true);
 const [showProfile, setShowProfile] = useState(false);
@@ -609,9 +616,17 @@ const [showProfile, setShowProfile] = useState(false);
           </div>
         </div>
       ))}
+      <div ref={messagesEndRef} />
     </div>
   )}
           </div>
+
+          {error && (
+            <p className="mx-auto max-w-3xl px-6 text-sm text-red-400">
+              Something went wrong. Please try again.
+            </p>
+          )}
+
 
           {/* Composer */}
           <div
