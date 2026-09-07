@@ -315,6 +315,7 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
                     <button
                       type="button"
                       key={chat.id}
+                      onClick={() => setConversationId(chat.id)}
                       className={`
                         group flex w-full items-center gap-3
                         rounded-lg px-3 py-2.5
