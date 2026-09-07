@@ -97,6 +97,9 @@ export default function EchoChatApp({
   const router = useRouter();
 const {messages: aiMessages, sendMessage, status, error} = useChat()
 const [message, setMessage] = useState("");
+const [conversationId, setConversationId] = useState<string | null>(null); 
+
+
 
 const messagesEndRef = useRef<HTMLDivElement>(null); 
 
@@ -120,8 +123,34 @@ const [showProfile, setShowProfile] = useState(false);
     setMessage(text);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
   if (!message.trim() || status !== "ready") return;
+
+  let currentConversationId = conversationId;
+
+  if (!currentConversationId) {
+    const response = await fetch("/api/conversations", {
+      method: "POST",
+    });
+
+    const conversation = await response.json();
+
+    currentConversationId = conversation.id;
+    setConversationId(currentConversationId);
+  }
+
+  await fetch(
+    `/api/conversations/${currentConversationId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content: message.trim(),
+      }),
+    }
+  );
 
   sendMessage({
     text: message.trim(),
