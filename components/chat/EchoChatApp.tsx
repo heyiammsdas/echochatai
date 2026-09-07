@@ -90,6 +90,10 @@ useEffect(() => {
 const [sidebarOpen, setSidebarOpen] = useState(true);
 const [showProfile, setShowProfile] = useState(false);
 const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
+const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+const [editingId, setEditingId] = useState<string | null>(null);
+const [editingTitle, setEditingTitle] = useState("");
+const [searchQuery, setSearchQuery] = useState("");
 
 
 
@@ -142,6 +146,47 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
   const handleLogout = async () => {
     await authClient.signOut();
     router.push("/login");
+  };
+
+  const handleRename = async (id: string) => {
+    const trimmed = editingTitle.trim();
+    if (!trimmed) {
+      setEditingId(null);
+      return;
+    }
+
+    const response = await fetch(`/api/conversations/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: trimmed }),
+    });
+
+    if (response.ok) {
+      const updated = await response.json();
+      setDbConversations((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, title: updated.title } : c))
+      );
+    }
+
+    setEditingId(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this conversation?")) return;
+
+    const response = await fetch(`/api/conversations/${id}`, {
+      method: "DELETE",
+    });
+
+    if (response.ok) {
+      setDbConversations((prev) => prev.filter((c) => c.id !== id));
+      if (conversationId === id) {
+        setConversationId(null);
+        setMessages([]);
+        setMessage("");
+      }
+    }
+    setMenuOpenId(null);
   };
 
   const handleSuggestion = (text: string) => {
@@ -205,6 +250,97 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
 
   setMessage("");
 };
+
+  const filteredConversations = dbConversations.filter((chat) =>
+    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const todayChats = filteredConversations.filter(
+    (chat) => new Date(chat.updatedAt).toDateString() === new Date().toDateString()
+  );
+
+  const yesterdayChats = filteredConversations.filter(
+    (chat) => new Date(chat.updatedAt).toDateString() === yesterdayDate
+  );
+
+  const renderChatItem = (chat: Conversation) => {
+    const isActive = conversationId === chat.id;
+    const isEditing = editingId === chat.id;
+
+    if (isEditing) {
+      return (
+        <div key={chat.id} className="flex w-full items-center gap-2 rounded-lg bg-white/5 px-3 py-2.5 text-sm">
+          <MessageSquare size={16} className="shrink-0 text-zinc-400" />
+          <input
+            autoFocus
+            value={editingTitle}
+            onChange={(e) => setEditingTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleRename(chat.id);
+              if (e.key === "Escape") setEditingId(null);
+            }}
+            className="flex-1 bg-transparent text-zinc-100 outline-none"
+          />
+          <button onClick={() => handleRename(chat.id)} className="text-zinc-400 hover:text-green-400">
+            ✓
+          </button>
+          <button onClick={() => setEditingId(null)} className="text-zinc-400 hover:text-red-400">
+            ✕
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div
+        key={chat.id}
+        className={`group relative flex w-full items-center rounded-lg text-sm transition ${
+          isActive ? "bg-white/7 text-zinc-100" : "text-zinc-400 hover:bg-white/4 hover:text-zinc-200"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setConversationId(chat.id)}
+          className="flex flex-1 items-center gap-3 px-3 py-2.5 text-left"
+        >
+          <MessageSquare size={16} className="shrink-0" />
+          <span className="truncate">{chat.title}</span>
+        </button>
+
+        <div className="absolute right-2 flex items-center">
+          <button
+            type="button"
+            onClick={() => setMenuOpenId(menuOpenId === chat.id ? null : chat.id)}
+            className={`p-1 text-zinc-500 hover:text-zinc-200 ${
+              menuOpenId === chat.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            }`}
+          >
+            ···
+          </button>
+          {menuOpenId === chat.id && (
+            <div className="absolute right-0 top-full z-50 mt-1 flex w-32 flex-col overflow-hidden rounded-lg border border-white/10 bg-[#15151c] py-1 shadow-xl">
+              <button
+                onClick={() => {
+                  setEditingId(chat.id);
+                  setEditingTitle(chat.title);
+                  setMenuOpenId(null);
+                }}
+                className="px-3 py-1.5 text-left text-sm text-zinc-300 hover:bg-white/5 hover:text-white"
+              >
+                Rename
+              </button>
+              <button
+                onClick={() => handleDelete(chat.id)}
+                className="px-3 py-1.5 text-left text-sm text-red-400 hover:bg-white/5 hover:text-red-300"
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <main className="flex h-screen w-full overflow-hidden bg-[#09090d] text-zinc-100">
@@ -328,9 +464,13 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
               >
                 <Search size={18} />
 
-                <span className="flex-1 text-sm">
-                  Search your threads...
-                </span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search your threads..."
+                  className="flex-1 bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-500"
+                />
 
                 <kbd
                   className="
@@ -347,90 +487,29 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
 
             {/* Chat History */}
             <div className="mt-7 flex-1 overflow-y-auto px-3">
+              {filteredConversations.length === 0 && searchQuery && (
+                <div className="px-4 py-4 text-center text-sm text-zinc-500">
+                  No conversations found.
+                </div>
+              )}
 
-              <p className="px-2 text-xs font-medium text-zinc-500">
-                Today
-              </p>
+              {todayChats.length > 0 && (
+                <>
+                  <p className="px-2 text-xs font-medium text-zinc-500">Today</p>
+                  <div className="mt-3 space-y-1">
+                    {todayChats.map(renderChatItem)}
+                  </div>
+                </>
+              )}
 
-              <div className="mt-3 space-y-1">
-                {dbConversations
-                   .filter(
-                      (chat) =>
-                        new Date(chat.updatedAt).toDateString() ===
-                        new Date().toDateString()
-                    )
-                  .map((chat, index) => (
-                    <button
-                      type="button"
-                      key={chat.id}
-                      onClick={() => setConversationId(chat.id)}
-                      className={`
-                        group flex w-full items-center gap-3
-                        rounded-lg px-3 py-2.5
-                        text-left text-sm
-                        transition
-                        ${
-                          index === 0
-                            ? "bg-white/7 text-zinc-100"
-                            : "text-zinc-400 hover:bg-white/4 hover:text-zinc-200"
-                        }
-                      `}
-                    >
-                      <MessageSquare
-                        size={16}
-                        className="shrink-0"
-                      />
-
-                      <span className="truncate">
-                        {chat.title}
-                      </span>
-
-                      {index === 0 && (
-                        <span className="ml-auto text-zinc-500">
-                          ···
-                        </span>
-                      )}
-                    </button>
-                  ))}
-              </div>
-
-            <p className="mt-7 px-2 text-xs font-medium text-zinc-500">
-              Yesterday
-            </p>
-
-    <div className="mt-3 space-y-1">
-      {dbConversations
-        .filter(
-          (chat) =>
-            new Date(chat.updatedAt).toDateString() ===
-            yesterdayDate
-        )
-        .map((chat) => (
-          <button
-            type="button"
-            key={chat.id}
-            onClick={() => setConversationId(chat.id)}
-            className="
-              flex w-full items-center gap-3
-              rounded-lg px-3 py-2.5
-              text-left text-sm
-              text-zinc-400
-              transition
-              hover:bg-white/4
-              hover:text-zinc-200
-            "
-          >
-            <MessageSquare
-              size={16}
-              className="shrink-0"
-            />
-
-            <span className="truncate">
-              {chat.title}
-            </span>
-          </button>
-        ))}
-    </div>
+              {yesterdayChats.length > 0 && (
+                <>
+                  <p className="mt-7 px-2 text-xs font-medium text-zinc-500">Yesterday</p>
+                  <div className="mt-3 space-y-1">
+                    {yesterdayChats.map(renderChatItem)}
+                  </div>
+                </>
+              )}
             </div>
             {/* User */}
             <div className="relative shrink-0 border-t border-white/7 p-3">
