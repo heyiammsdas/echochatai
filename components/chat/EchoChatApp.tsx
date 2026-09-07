@@ -66,37 +66,9 @@ type Conversation = {
   createdAt: string;
   updatedAt: string;
 };
-
-const conversations = [
-  {
-    title: "Greeting",
-    date: "Today",
-  },
-  {
-    title: "React Hooks Explained",
-    date: "Today",
-  },
-  {
-    title: "Next.js Authentication",
-    date: "Today",
-  },
-  {
-    title: "PostgreSQL Relationships",
-    date: "Today",
-  },
-  {
-    title: "Docker Basics",
-    date: "Yesterday",
-  },
-  {
-    title: "Tailwind CSS Tips",
-    date: "Yesterday",
-  },
-  {
-    title: "What is TypeScript?",
-    date: "Yesterday",
-  },
-];
+const yesterdayDate = new Date(
+  Date.now() - 86400000
+).toDateString();
 
 export default function EchoChatApp({
   user,
@@ -118,6 +90,8 @@ useEffect(() => {
 const [sidebarOpen, setSidebarOpen] = useState(true);
 const [showProfile, setShowProfile] = useState(false);
 const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
+
+
 
 
   useEffect(() => {
@@ -157,6 +131,7 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
 
     currentConversationId = conversation.id;
     setConversationId(currentConversationId);
+    setDbConversations((prev) => [conversation, ...prev]);
   }
 
   await fetch(
@@ -331,6 +306,11 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
 
               <div className="mt-3 space-y-1">
                 {dbConversations
+                   .filter(
+                      (chat) =>
+                        new Date(chat.updatedAt).toDateString() ===
+                        new Date().toDateString()
+                    )
                   .map((chat, index) => (
                     <button
                       type="button"
@@ -365,40 +345,43 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
                   ))}
               </div>
 
-              <p className="mt-7 px-2 text-xs font-medium text-zinc-500">
-                Yesterday
-              </p>
+            <p className="mt-7 px-2 text-xs font-medium text-zinc-500">
+              Yesterday
+            </p>
 
-              <div className="mt-3 space-y-1">
-                {conversations
-                  .filter((chat) => chat.date === "Yesterday")
-                  .map((chat) => (
-                    <button
-                      type="button"
-                      key={chat.title}
-                      className="
-                        flex w-full items-center gap-3
-                        rounded-lg px-3 py-2.5
-                        text-left text-sm
-                        text-zinc-400
-                        transition
-                        hover:bg-white/4
-                        hover:text-zinc-200
-                      "
-                    >
-                      <MessageSquare
-                        size={16}
-                        className="shrink-0"
-                      />
+    <div className="mt-3 space-y-1">
+      {dbConversations
+        .filter(
+          (chat) =>
+            new Date(chat.updatedAt).toDateString() ===
+            yesterdayDate
+        )
+        .map((chat) => (
+          <button
+            type="button"
+            key={chat.id}
+            className="
+              flex w-full items-center gap-3
+              rounded-lg px-3 py-2.5
+              text-left text-sm
+              text-zinc-400
+              transition
+              hover:bg-white/4
+              hover:text-zinc-200
+            "
+          >
+            <MessageSquare
+              size={16}
+              className="shrink-0"
+            />
 
-                      <span className="truncate">
-                        {chat.title}
-                      </span>
-                    </button>
-                  ))}
-              </div>
+            <span className="truncate">
+              {chat.title}
+            </span>
+          </button>
+        ))}
+    </div>
             </div>
-
             {/* User */}
             <div className="relative shrink-0 border-t border-white/7 p-3">
 
