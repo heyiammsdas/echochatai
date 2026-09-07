@@ -165,7 +165,7 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
     setDbConversations((prev) => [conversation, ...prev]);
   }
 
-  await fetch(
+  const response = await fetch(
     `/api/conversations/${currentConversationId}/messages`,
     {
       method: "POST",
@@ -177,6 +177,19 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
       }),
     }
   );
+
+  if (response.ok) {
+    const data = await response.json();
+    if (data.updatedTitle) {
+      setDbConversations((prev) =>
+        prev.map((c) =>
+          c.id === currentConversationId
+            ? { ...c, title: data.updatedTitle }
+            : c
+        )
+      );
+    }
+  }
 
   sendMessage({
     text: message.trim(),
