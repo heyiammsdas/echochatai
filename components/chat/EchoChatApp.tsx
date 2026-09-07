@@ -33,12 +33,6 @@ type EchoChatAppProps = {
   };
 };
 
-type ChatMessage = {
-
-  id: number ; 
-  role: "user" | "assistant" ;
-  content : string ;
-} ;
 
 const suggestions = [
   {
@@ -572,6 +566,17 @@ const [showProfile, setShowProfile] = useState(false);
     /* ================= MESSAGES ================= */
     <div className="mx-auto w-full max-w-3xl space-y-6 pt-8">
 
+    {status === "submitted" && (
+      <div className="text-sm text-zinc-500">
+        Thinking...
+      </div>
+   )}
+
+   {status === "streaming" && (
+      <div className="text-sm text-zinc-500">
+        Generating...
+      </div>
+   )}
       {aiMessages.map((msg) => (
         <div
           key={msg.id}
