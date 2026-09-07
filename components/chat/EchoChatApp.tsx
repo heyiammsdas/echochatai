@@ -74,7 +74,7 @@ export default function EchoChatApp({
   user,
 }: EchoChatAppProps) {
   const router = useRouter();
-const {messages: aiMessages, sendMessage, status, error} = useChat()
+const {messages: aiMessages, setMessages, sendMessage, status, error} = useChat()
 const [message, setMessage] = useState("");
 const [conversationId, setConversationId] = useState<string | null>(null); 
 
@@ -107,6 +107,37 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
 
   loadConversations();
 }, []);
+
+  useEffect(() => {
+  if (!conversationId) return;
+
+  const loadMessages = async () => {
+    const response = await fetch(
+      `/api/conversations/${conversationId}/messages`
+    );
+
+    if (!response.ok) return;
+
+    const conversation = await response.json();
+
+    setMessages(
+  conversation.messages.map((msg: { id: string; role: "user" | "assistant" | "system" | "data"; content: string }) => ({
+    id: msg.id,
+    role: msg.role,
+    content: msg.content,
+    parts: [
+      {
+        type: "text",
+        text: msg.content,
+      },
+    ],
+  }))
+);
+  };
+
+  loadMessages();
+}, [conversationId, setMessages]);
+
 
   const handleLogout = async () => {
     await authClient.signOut();
@@ -249,7 +280,11 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
             <div className="px-4">
               <button
                 type="button"
-                onClick={() => setMessage("")}
+                onClick={() => {
+                  setMessage("");
+                  setConversationId(null);
+                  setMessages([]);
+                }}
                 className="
                   flex w-full items-center justify-center gap-2
                   rounded-xl
@@ -361,6 +396,7 @@ const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
           <button
             type="button"
             key={chat.id}
+            onClick={() => setConversationId(chat.id)}
             className="
               flex w-full items-center gap-3
               rounded-lg px-3 py-2.5
