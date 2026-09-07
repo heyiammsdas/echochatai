@@ -8,13 +8,30 @@ import {
 
 import db from "@/lib/db";
 
+const AVAILABLE_MODELS: Record<string, { name: string }> = {
+  "openrouter/free": {
+    name: "Free Auto",
+  },
+  "liquid/lfm-2.5-2.6b:free": {
+    name: "Liquid LFM 2.5",
+  },
+  "nvidia/nemotron-3.5-lightning:free": {
+    name: "Nemotron 3.5 Lightning",
+  },
+  "cohere/north-mini-code:free": {
+    name: "Cohere North Mini Code",
+  },
+};
+
 export async function POST(request: Request) {
-  const { messages, conversationId } = await request.json();
+  const { messages, conversationId, model } = await request.json();
 
   const modelMessages = await convertToModelMessages(messages);
 
+  const verifiedModel = AVAILABLE_MODELS[model] ? model : "openrouter/free";
+
   const result = streamText({
-    model: openrouter("openrouter/free"),
+    model: openrouter(verifiedModel),
     messages: modelMessages,
   });
 
@@ -26,7 +43,7 @@ export async function POST(request: Request) {
         conversationId,
         role: "assistant",
         content: text,
-        model: "openrouter/free",
+        model: verifiedModel,
       },
     });
   });

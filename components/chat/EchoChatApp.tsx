@@ -70,6 +70,21 @@ const yesterdayDate = new Date(
   Date.now() - 86400000
 ).toDateString();
 
+const AVAILABLE_MODELS: Record<string, { name: string }> = {
+  "openrouter/free": {
+    name: "Free Auto",
+  },
+  "liquid/lfm-2.5-2.6b:free": {
+    name: "Liquid LFM 2.5",
+  },
+  "nvidia/nemotron-3.5-lightning:free": {
+    name: "Nemotron 3.5 Lightning",
+  },
+  "cohere/north-mini-code:free": {
+    name: "Cohere North Mini Code",
+  },
+};
+
 export default function EchoChatApp({
   user,
 }: EchoChatAppProps) {
@@ -94,6 +109,8 @@ const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 const [editingId, setEditingId] = useState<string | null>(null);
 const [editingTitle, setEditingTitle] = useState("");
 const [searchQuery, setSearchQuery] = useState("");
+const [selectedModel, setSelectedModel] = useState("openrouter/free");
+const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
 
 
 
@@ -242,6 +259,7 @@ const [searchQuery, setSearchQuery] = useState("");
   {
     body: {
       conversationId: currentConversationId,
+      model: selectedModel,
     },
   }
 
@@ -850,21 +868,43 @@ const [searchQuery, setSearchQuery] = useState("");
                 {/* Composer controls */}
                 <div className="flex items-center gap-2 px-4 pb-4">
 
-                  <button
-                    type="button"
-                    className="
-                      flex items-center gap-2
-                      rounded-lg px-2 py-2
-                      text-sm font-medium
-                      text-violet-400
-                      transition
-                      hover:bg-white/5
-                    "
-                  >
-                    <Sparkles size={16} />
-                    Free Model
-                    <ChevronDown size={14} />
-                  </button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setModelSelectorOpen(!modelSelectorOpen)}
+                      className="
+                        flex items-center gap-2
+                        rounded-lg px-2 py-2
+                        text-sm font-medium
+                        text-violet-400
+                        transition
+                        hover:bg-white/5
+                      "
+                    >
+                      <Sparkles size={16} />
+                      {AVAILABLE_MODELS[selectedModel]?.name || "Free Model"}
+                      <ChevronDown size={14} />
+                    </button>
+
+                    {modelSelectorOpen && (
+                      <div className="absolute bottom-full left-0 mb-2 w-48 overflow-hidden rounded-lg border border-white/10 bg-[#15151c] shadow-xl z-50">
+                        {Object.entries(AVAILABLE_MODELS).map(([id, model]) => (
+                          <button
+                            key={id}
+                            onClick={() => {
+                              setSelectedModel(id);
+                              setModelSelectorOpen(false);
+                            }}
+                            className={`flex w-full items-center px-3 py-2 text-left text-sm transition hover:bg-white/5 ${
+                              selectedModel === id ? "bg-white/10 text-violet-400 font-medium" : "text-zinc-300"
+                            }`}
+                          >
+                            {model.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
                   <div className="h-5 w-px bg-white/7" />
 
