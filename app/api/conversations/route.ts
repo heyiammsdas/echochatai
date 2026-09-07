@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import db from "@/lib/db";
 
-export async function POST() {
+export async function GET() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -15,12 +15,14 @@ export async function POST() {
     );
   }
 
-  const conversation = await db.conversation.create({
-    data: {
-      title: "New Chat",
+  const conversations = await db.conversation.findMany({
+    where: {
       userId: session.user.id,
+    },
+    orderBy: {
+      updatedAt: "desc",
     },
   });
 
-  return Response.json(conversation);
+  return Response.json(conversations);
 }

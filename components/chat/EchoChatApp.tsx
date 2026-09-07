@@ -60,6 +60,13 @@ const exampleQuestions = [
   "What is the meaning of life?",
 ];
 
+type Conversation = {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 const conversations = [
   {
     title: "Greeting",
@@ -110,9 +117,22 @@ useEffect(() => {
 
 const [sidebarOpen, setSidebarOpen] = useState(true);
 const [showProfile, setShowProfile] = useState(false);
+const [dbConversations, setDbConversations] = useState<Conversation[]>([]);
 
 
+  useEffect(() => {
+  const loadConversations = async () => {
+    const response = await fetch("/api/conversations");
 
+    if (!response.ok) return;
+
+    const data = await response.json();
+
+    setDbConversations(data);
+  };
+
+  loadConversations();
+}, []);
 
   const handleLogout = async () => {
     await authClient.signOut();
@@ -154,7 +174,15 @@ const [showProfile, setShowProfile] = useState(false);
 
   sendMessage({
     text: message.trim(),
-  });
+  }, 
+  {
+    body: {
+      conversationId: currentConversationId,
+    },
+  }
+
+
+);
 
   setMessage("");
 };
@@ -302,12 +330,11 @@ const [showProfile, setShowProfile] = useState(false);
               </p>
 
               <div className="mt-3 space-y-1">
-                {conversations
-                  .filter((chat) => chat.date === "Today")
+                {dbConversations
                   .map((chat, index) => (
                     <button
                       type="button"
-                      key={chat.title}
+                      key={chat.id}
                       className={`
                         group flex w-full items-center gap-3
                         rounded-lg px-3 py-2.5
