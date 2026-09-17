@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import db from "@/lib/db";
+import { redis } from "@/lib/redis";
 
 export async function PATCH(
   request: Request,
@@ -38,6 +39,8 @@ export async function PATCH(
     data: { title: trimmedTitle },
   });
 
+  await redis.del(`conversations:${session.user.id}`);
+
   return Response.json(updatedConversation);
 }
 
@@ -69,6 +72,8 @@ export async function DELETE(
   await db.conversation.delete({
     where: { id: conversationId },
   });
+
+  await redis.del(`conversations:${session.user.id}`);
 
   return Response.json({ success: true });
 }

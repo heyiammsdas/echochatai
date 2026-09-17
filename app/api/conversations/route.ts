@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import db from "@/lib/db";
+import { redis } from "@/lib/redis";
 
 export async function GET() {
   const session = await auth.api.getSession({
@@ -15,6 +16,13 @@ export async function GET() {
     );
   }
 
+  const cacheKey = `conversations:${session.user.id}`;
+  const cached = await redis.get(cacheKey);
+
+  if (cached) {
+    return Response.json(cached);
+  }
+
   const conversations = await db.conversation.findMany({
     where: {
       userId: session.user.id,
@@ -23,6 +31,8 @@ export async function GET() {
       updatedAt: "desc",
     },
   });
+
+  await redis.set(cacheKey, conversations, { ex: 60 });
 
   return Response.json(conversations);
 }
@@ -45,6 +55,8 @@ export async function POST() {
       userId: session.user.id,
     },
   });
+
+  await redis.del(`conversations:${session.user.id}`);
 
   return Response.json(conversation);
 }
