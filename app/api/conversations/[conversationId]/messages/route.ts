@@ -96,6 +96,10 @@ export async function POST(
       data: { title: newTitle },
     });
     
+    // Invalidate cache since title changed
+    const { redis } = await import("@/lib/redis");
+    await redis.del(`conversations:${session.user.id}`);
+    
     updatedTitle = newTitle;
   }
 
