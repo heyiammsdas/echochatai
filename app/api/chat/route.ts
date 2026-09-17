@@ -5,8 +5,17 @@ import {
   streamText,
   convertToModelMessages,
 } from "ai";
+import { headers } from "next/headers";
+import { Ratelimit } from "@upstash/ratelimit";
 
+import { auth } from "@/lib/auth";
 import db from "@/lib/db";
+import { redis } from "@/lib/redis";
+
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
+});
 
 const AVAILABLE_MODELS: Record<string, { name: string }> = {
   "openrouter/free": {
@@ -24,6 +33,22 @@ const AVAILABLE_MODELS: Record<string, { name: string }> = {
 };
 
 export async function POST(request: Request) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { success } = await ratelimit.limit(`chat_${session.user.id}`);
+  if (!success) {
+    return Response.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429 }
+    );
+  }
+
   const { messages, conversationId, model } = await request.json();
 
   const modelMessages = await convertToModelMessages(messages);
